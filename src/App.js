@@ -29,6 +29,14 @@ function App() {
     setError(null);
     setLoading(true);
 
+    // NEW: if Supabase is not initialised, show a clear error
+    if (!supabase) {
+      console.error("Supabase client is not initialised – check env vars on Vercel.");
+      setError("Configuration error: backend is not ready. Please try again later.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const { error: insertError } = await supabase.from("requests").insert([
         {
@@ -37,7 +45,7 @@ function App() {
           phone,
           service,
           notes,
-          status: "new", // default status for your pipeline
+          status: "new",
         },
       ]);
 
@@ -70,7 +78,7 @@ function App() {
         <h1 style={styles.title}>Aarivian Bridge</h1>
         <p style={styles.subtitle}>
           Tell us what you need. We will review your request and connect you
-          with the right specialist or service.
+          with the right specialist.
         </p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
