@@ -70,7 +70,7 @@ function App() {
         <h1 style={styles.title}>Aarivian Bridge</h1>
         <p style={styles.subtitle}>
           Tell us what you need. We will review your request and connect you
-          with the right specialist.
+          with the right specialist or service.
         </p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
@@ -142,11 +142,7 @@ function App() {
           </p>
         )}
 
-        {error && (
-          <p style={styles.error}>
-            {error}
-          </p>
-        )}
+        {error && <p style={styles.error}>{error}</p>}
       </div>
     </div>
   );
