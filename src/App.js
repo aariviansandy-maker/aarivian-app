@@ -1,4 +1,6 @@
+// src/App.js
 import React, { useState } from "react";
+import { supabase } from "./supabaseClient";
 
 const SERVICES = [
   "Nursing jobs",
@@ -17,20 +19,49 @@ function App() {
   const [notes, setNotes] = useState("");
 
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // For now we just log. Later we will send this to Supabase + Stripe.
-    console.log("Request submitted:", {
-      fullName,
-      email,
-      phone,
-      service,
-      notes,
-    });
+    setSubmitted(false);
+    setError(null);
+    setLoading(true);
 
-    setSubmitted(true);
+    try {
+      const { error: insertError } = await supabase.from("requests").insert([
+        {
+          full_name: fullName,
+          email,
+          phone,
+          service,
+          notes,
+          status: "new", // default status for your pipeline
+        },
+      ]);
+
+      if (insertError) {
+        console.error("Supabase insert error:", insertError);
+        setError("Something went wrong. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Clear form on success
+      setFullName("");
+      setEmail("");
+      setPhone("");
+      setService(SERVICES[0]);
+      setNotes("");
+
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Network / unknown error:", err);
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -99,16 +130,21 @@ function App() {
             />
           </label>
 
-          <button type="submit" style={styles.button}>
-            Submit Request
+          <button type="submit" style={styles.button} disabled={loading}>
+            {loading ? "Submitting..." : "Submit Request"}
           </button>
         </form>
 
-        {submitted && (
+        {submitted && !error && (
           <p style={styles.success}>
-            Thank you. Your request has been recorded (local only for now).
-            In the next steps we will save this to Supabase and connect
-            payment with Stripe.
+            Thank you. Your request has been received. We will review it and
+            contact you soon.
+          </p>
+        )}
+
+        {error && (
+          <p style={styles.error}>
+            {error}
           </p>
         )}
       </div>
@@ -179,6 +215,11 @@ const styles = {
     marginTop: 16,
     fontSize: 13,
     color: "#1b5e20",
+  },
+  error: {
+    marginTop: 16,
+    fontSize: 13,
+    color: "#b71c1c",
   },
 };
 
